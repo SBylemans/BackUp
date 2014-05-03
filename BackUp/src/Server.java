@@ -62,7 +62,7 @@ public class Server {
 				count = 0;
 				//TODO
 				while(total < fileNameLength && (count = reader.read(b, 0, (int) Math.min(b.length, fileNameLength-total))) > 0){
-					name += new String(b,0,(int) Math.min(b.length, fileNameLength-total));
+					name += new String(b,0,count);
 					total += count;
 				}
 				String path = new String(name);
@@ -87,11 +87,8 @@ public class Server {
 					}
 					writer.writeUTF("File " + file.getAbsolutePath() + " is created!");
 					writer.flush();
-					bos.flush();
-					fos.flush();
 					bos.close();
 					fos.close();
-					out.flush();
 
 				} else file.mkdirs();
 			} catch (IOException e) {

@@ -76,7 +76,6 @@ public class Client {
 					System.out.println(serverToClient.readUTF());
 					bis.close();
 					fis.close();
-					clientToServer.flush();
 				}
 			}
 
