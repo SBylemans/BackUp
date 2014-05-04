@@ -82,7 +82,7 @@ public class Server {
 				    total = 0;
 					count = 0;
 					while(total < length && (count = reader.read(b, 0, (int) Math.min(b.length, length-total))) > 0){
-						bos.write(b,0,(int) Math.min(b.length, length-total));
+						bos.write(b,0,count);
 						total += count;
 					}
 					writer.writeUTF("File " + file.getAbsolutePath() + " is created!");
