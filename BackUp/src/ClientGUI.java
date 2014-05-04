@@ -2,7 +2,9 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -13,25 +15,37 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.SpringLayout;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 
 public class ClientGUI {
 
 	public ClientGUI(){
 		JFrame frame = new JFrame("Back up to server");
-		frame.setMinimumSize(new Dimension(400,400));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setMinimumSize(new Dimension(400,400));
 		
 		final JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		
 		final JTextField name = new JTextField();
+		name.setMaximumSize(new Dimension(100,19));
 		final JTextField port = new JTextField();
+		port.setMaximumSize(new Dimension(100,19));
 		
 		JLabel namelabel = new JLabel("Name: ");
 		JLabel portlabel = new JLabel("Port: ");
+		
+		final JPanel panelServer = new JPanel();
+		panelServer.setLayout(new BoxLayout(panelServer, BoxLayout.LINE_AXIS));
+		
+		panelServer.add(namelabel);
+		panelServer.add(name);
+		panelServer.add(portlabel);
+		panelServer.add(port);
+		
+		panel.add(panelServer);
 		
 		final JTextArea files = new JTextArea();
 		files.setEditable(false);
@@ -85,10 +99,13 @@ public class ClientGUI {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String string = files.getText();
-				if(!string.equals("")){
+				if(name.getText().equals("") || port.getText().equals("")){
+					JOptionPane.showMessageDialog(panel, "No name or port of server given");
+				}
+				else if(!string.equals("")){
 					String[] split = string.split("\n");
 					for(String f : split){
-						Client client = new Client("localhost", 2121);
+						Client client = new Client(name.getText(), Integer.parseInt(port.getText()));
 						client.backUp(f);
 					}
 					files.setText("");
@@ -102,8 +119,11 @@ public class ClientGUI {
 		panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.X_AXIS));
 		
 		panelButtons.add(selectFile);
+		panelButtons.add(Box.createRigidArea(new Dimension(10, 0)));
 		panelButtons.add(removeFile);
+		panelButtons.add(Box.createRigidArea(new Dimension(10, 0)));
 		panelButtons.add(backUp);
+		
 		
 		panel.add(panelButtons);
 		
@@ -114,6 +134,23 @@ public class ClientGUI {
 	}
 	
 	public static void main(String[] args){
+		try {
+			// Set System L&F
+			UIManager.setLookAndFeel(
+					"com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
+		} 
+		catch (UnsupportedLookAndFeelException e) {
+			System.out.println("Not supported");
+		}
+		catch (ClassNotFoundException e) {
+			System.out.println("Not found");
+		}
+		catch (InstantiationException e) {
+			System.out.println("Not initiated");
+		}
+		catch (IllegalAccessException e) {
+			System.out.println("Illegal Acces");
+		}
 		new ClientGUI();
 	}
 	
