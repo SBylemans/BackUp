@@ -13,6 +13,8 @@ public class Client {
 	private Socket client;
 	private DataOutputStream clientToServer;
 	private byte[] buffer;
+	private int allfiles;
+	private int backedUpFiles ;
 
 	public Client(String name, int port){
 	    try {
@@ -52,6 +54,7 @@ public class Client {
 		long length = 0;
 		try{
 			listf(filePath, files);
+			allfiles = files.size();
 			clientToServer.writeInt(files.size());
 			int total;
 			int count;
@@ -77,6 +80,7 @@ public class Client {
 					bis.close();
 					fis.close();
 				}
+				backedUpFiles++;
 			}
 
 		} catch(IOException e){
@@ -97,17 +101,28 @@ public class Client {
 	    }
 	    else{
 	    	File[] fList = directory.listFiles();
-	    	for (File file : fList) {
-	    		if(file.isDirectory() && file.listFiles().length == 0) files.add(file);
-	    		else{
-	    			if (file.isFile()) {
-	    				files.add(file);
-	    			} else if (file.isDirectory()) {
-	    				listf(file.getAbsolutePath(), files);
+	    	if(directory.isDirectory() && directory.listFiles().length == 0) files.add(directory);
+	    	else{
+	    		for (File file : fList) {
+	    			if(file.isDirectory() && file.listFiles().length == 0) files.add(file);
+	    			else{
+	    				if (file.isFile()) {
+	    					files.add(file);
+	    				} else if (file.isDirectory()) {
+	    					listf(file.getAbsolutePath(), files);
+	    				}
 	    			}
 	    		}
 	    	}
 	    }
+	}
+	
+	public int getFilesSize(){
+		return allfiles;
+	}
+	
+	public int getBackedUpFilesSize(){
+		return backedUpFiles;
 	}
 
 	public static void main(String[] args){

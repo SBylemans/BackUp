@@ -1,3 +1,4 @@
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,9 +13,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -30,9 +33,9 @@ public class ClientGUI {
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 		
 		final JTextField name = new JTextField();
-		name.setMaximumSize(new Dimension(100,19));
+		name.setMaximumSize(new Dimension(100,30));
 		final JTextField port = new JTextField();
-		port.setMaximumSize(new Dimension(100,19));
+		port.setMaximumSize(new Dimension(100,30));
 		
 		JLabel namelabel = new JLabel("Name: ");
 		JLabel portlabel = new JLabel("Port: ");
@@ -92,6 +95,9 @@ public class ClientGUI {
 			}
 		});
 		
+		//New frame met statusbar
+		
+		
 		JButton backUp = new JButton("Back Up");
 		backUp.setAlignmentX(panel.CENTER_ALIGNMENT);
 		backUp.addActionListener(new ActionListener() {
@@ -102,13 +108,19 @@ public class ClientGUI {
 				if(name.getText().equals("") || port.getText().equals("")){
 					JOptionPane.showMessageDialog(panel, "No name or port of server given");
 				}
+				 
 				else if(!string.equals("")){
+					
 					String[] split = string.split("\n");
+					JProgressBar progressBar = new JProgressBar(0, split.length);
+				    progressBar.setValue(0);
+				    progressBar.setStringPainted(true);
 					for(String f : split){
 						Client client = new Client(name.getText(), Integer.parseInt(port.getText()));
 						client.backUp(f);
 					}
 					files.setText("");
+					
 					JOptionPane.showMessageDialog(panel, "All files backed up");
 				} else{
 					JOptionPane.showMessageDialog(panel, "No files to back up");
