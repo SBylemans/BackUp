@@ -1,9 +1,9 @@
-import java.awt.BorderLayout;
+package Client;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Arrays;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -17,7 +17,6 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -25,7 +24,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class ClientGUI {
 
 	public ClientGUI(){
-		JFrame frame = new JFrame("Back up to server");
+		JFrame frame = new JFrame("Back up client");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(400,400));
 		
@@ -59,7 +58,7 @@ public class ClientGUI {
 		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		
 		JButton selectFile = new JButton("Select Files");
-		selectFile.setAlignmentX(panel.CENTER_ALIGNMENT);
+		selectFile.setAlignmentX(Component.CENTER_ALIGNMENT);
 		selectFile.addActionListener(new ActionListener() {
 			
 			@Override
@@ -78,7 +77,7 @@ public class ClientGUI {
 			}
 		});
 		JButton removeFile = new JButton("Remove");
-		removeFile.setAlignmentX(panel.CENTER_ALIGNMENT);
+		removeFile.setAlignmentX(Component.CENTER_ALIGNMENT);
 		removeFile.addActionListener(new ActionListener() {
 			
 			@Override
@@ -99,7 +98,7 @@ public class ClientGUI {
 		
 		
 		JButton backUp = new JButton("Back Up");
-		backUp.setAlignmentX(panel.CENTER_ALIGNMENT);
+		backUp.setAlignmentX(Component.CENTER_ALIGNMENT);
 		backUp.addActionListener(new ActionListener() {
 			
 			@Override

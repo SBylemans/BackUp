@@ -1,3 +1,4 @@
+package Server;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -9,8 +10,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 
-public class Server {
+public class Server extends Thread {
 
+	private static boolean notStopped = true;
 	private ServerSocket server;
 	private Socket acceptingSocket;
 
@@ -97,10 +99,25 @@ public class Server {
 		}
 	}
 	
+	public void stopActivity(){
+		try {
+			acceptingSocket.close();
+		} catch (IOException | NullPointerException e) {
+			if(e.getClass().equals(IOException.class))
+				stopActivity();
+		}
+		try {
+			server.close();
+			System.out.println("Done");
+		} catch (IOException e) {
+			stopActivity();
+		}
+	}
+	
 	public static void main(String[] args){
 		int port = Integer.parseInt(args[0]);
 		Server server = new Server(port);
-		while(true)
+		while(notStopped)
 			server.run();
 	}
 }
