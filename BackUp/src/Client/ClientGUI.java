@@ -1,6 +1,7 @@
 package Client;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -137,6 +138,8 @@ public class ClientGUI {
 		
 		
 		panel.add(panelButtons);
+		
+		frame.setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("Image/client.png")));
 		
 		frame.add(panel);
 		frame.setVisible(true);
