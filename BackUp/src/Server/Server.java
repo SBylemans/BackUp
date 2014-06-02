@@ -12,7 +12,7 @@ import java.net.Socket;
 
 public class Server extends Thread {
 
-	private static boolean notStopped = true;
+	private static boolean notStopped = false;
 	private ServerSocket server;
 	private Socket acceptingSocket;
 
@@ -30,6 +30,7 @@ public class Server extends Thread {
 	 * Reads all files and puts them in the back-up folder. Also creates the appropriate dirs.
 	 */
 	public void run(){
+		notStopped = true;
 		BufferedInputStream buffer = null;
 		DataInputStream reader = null;
 		BufferedOutputStream out = null;
@@ -109,6 +110,7 @@ public class Server extends Thread {
 		try {
 			server.close();
 			System.out.println("Done");
+			notStopped = false;
 		} catch (IOException e) {
 			stopActivity();
 		}
@@ -117,7 +119,12 @@ public class Server extends Thread {
 	public static void main(String[] args){
 		int port = Integer.parseInt(args[0]);
 		Server server = new Server(port);
-		while(notStopped)
+		do
 			server.run();
+		while(notStopped);
+	}
+
+	public boolean isRunning() {
+		return notStopped;
 	}
 }
