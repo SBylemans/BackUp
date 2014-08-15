@@ -14,8 +14,6 @@ public class Client {
 	private Socket client;
 	private DataOutputStream clientToServer;
 	private byte[] buffer;
-	private int allfiles;
-	private int backedUpFiles ;
 
 	public Client(String name, int port){
 	    try {
@@ -54,8 +52,8 @@ public class Client {
 		boolean dir = false;
 		long length = 0;
 		try{
+			clientToServer.writeUTF("backup");
 			listf(filePath, files);
-			allfiles = files.size();
 			clientToServer.writeInt(files.size());
 			int total;
 			int count;
@@ -81,7 +79,6 @@ public class Client {
 					bis.close();
 					fis.close();
 				}
-				backedUpFiles++;
 			}
 
 		} catch(IOException e){
@@ -118,23 +115,26 @@ public class Client {
 	    }
 	}
 	
-	public int getFilesSize(){
-		return allfiles;
-	}
-	
-	public int getBackedUpFilesSize(){
-		return backedUpFiles;
-	}
-
 	public static void main(String[] args){
 		String name = args[0];
 		int port = Integer.parseInt(args[1]);
 		System.out.println("Name: " + name + " Port: " + port);
 		Client client = new Client(name, port);
-		File file = new File(args[2]);
-		if(file.exists())client.backUp(args[2]);
-		else System.out.println("File doesn't exist");
+		if(args[2].equalsIgnoreCase("backup")){
+			System.out.println(args[3]);
+			File file = new File(args[3]);
+			if(file.exists())client.backUp(args[3]);
+			else System.out.println("File doesn't exist");
+		} else if(args[2].equalsIgnoreCase("get")){
+			String[] backedUpFiles = client.get(args[3]);
+		}
 		client.stop();
+		
+	}
+
+	private String[] get(String string) {
+		return null;
+		// TODO Auto-generated method stub
 		
 	}
 }
