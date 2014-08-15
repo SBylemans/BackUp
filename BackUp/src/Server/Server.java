@@ -127,4 +127,8 @@ public class Server extends Thread {
 	public boolean isRunning() {
 		return notStopped;
 	}
+
+	public int getPort() {
+		return server.getLocalPort();
+	}
 }
