@@ -1,9 +1,11 @@
 package Client;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -43,6 +45,42 @@ public class Client {
 		}
 	}
 	
+	private void sendFileNameAndLength(File file){
+		try {
+			clientToServer.writeInt(file.getAbsolutePath().length());
+			clientToServer.flush();
+			clientToServer.writeBytes(file.getAbsolutePath());
+			clientToServer.flush();
+			clientToServer.writeLong(file.length());
+			clientToServer.flush();
+			clientToServer.writeBoolean(file.isDirectory());
+			clientToServer.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void sendFile(File file){
+		try{
+			FileInputStream fis = new FileInputStream(file);
+
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			int total = 0;
+			int count = 0;
+			long length = file.length();
+			while(total < length && (count = bis.read(buffer, 0, (int) Math.min(buffer.length, length-total))) > 0){
+				clientToServer.write(buffer,0,(int) Math.min(buffer.length, length-total));
+				total += count;
+			}
+			System.out.println(serverToClient.readUTF());
+			bis.close();
+			fis.close();
+		}catch (IOException e){
+			System.out.println("Could not send file");
+		}
+	}
+
 	/**
 	 * Sends all files and content of the files to the back-up server
 	 * @param filePath
@@ -50,34 +88,15 @@ public class Client {
 	public void backUp(String filePath){
 		ArrayList<File> files = new ArrayList<File>();
 		boolean dir = false;
-		long length = 0;
 		try{
 			clientToServer.writeUTF("backup");
 			listf(filePath, files);
 			clientToServer.writeInt(files.size());
-			int total;
-			int count;
 			for(File fi : files){
-				dir = false;
-				if(fi.isDirectory()) dir = true;
-				clientToServer.writeInt(fi.getAbsolutePath().length());
-				System.out.println(fi.getAbsolutePath().length());
-				clientToServer.writeBytes(fi.getAbsolutePath());
-				length = fi.length();
-				clientToServer.writeLong(length);
-				clientToServer.writeBoolean(dir);
+				sendFileNameAndLength(fi);
+				dir = fi.isDirectory();
 				if(!dir){
-					FileInputStream fis = new FileInputStream(fi);
-					BufferedInputStream bis = new BufferedInputStream(fis);
-					total = 0;
-					count = 0;
-					while(total < length && (count = bis.read(buffer, 0, (int) Math.min(buffer.length, length-total))) > 0){
-						clientToServer.write(buffer,0,(int) Math.min(buffer.length, length-total));
-						total += count;
-					}
-					System.out.println(serverToClient.readUTF());
-					bis.close();
-					fis.close();
+					sendFile(fi);
 				}
 			}
 
@@ -126,15 +145,101 @@ public class Client {
 			if(file.exists())client.backUp(args[3]);
 			else System.out.println("File doesn't exist");
 		} else if(args[2].equalsIgnoreCase("get")){
-			String[] backedUpFiles = client.get(args[3]);
+			client.get();
+		} else if(args[2].equalsIgnoreCase("restore")){
+			client.restore(args[3],args[4]);
 		}
 		client.stop();
 		
 	}
 
-	private String[] get(String string) {
-		return null;
-		// TODO Auto-generated method stub
-		
+	private void restore(String fileToRestore, String location) {
+		String name = "";
+		long length;
+		boolean dir;
+		try {
+			clientToServer.writeUTF("restore");
+			sendFileNameAndLength(new File(fileToRestore));
+			int size = this.serverToClient.readInt();
+			for(int i = 0; i < size; i++){
+				name = readFileName(serverToClient, buffer);
+				String sub = name.substring(name.lastIndexOf("/"));
+				String path = location + sub;
+				File file = new File(path);
+				length = serverToClient.readLong();
+				dir = serverToClient.readBoolean();
+				if(!dir){
+					receiveFile(serverToClient,clientToServer,file, length);
+				} else file.mkdirs();
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void receiveFile(DataInputStream reader, DataOutputStream writer, File file, long length) {
+		try{
+			int t = file.getAbsolutePath().lastIndexOf("/");
+			String dirs = file.getAbsolutePath().substring(0, t);
+			System.out.println("File: " + file.getAbsolutePath());
+			int p = dirs.lastIndexOf("/");
+			String last = dirs.substring(p);
+			String directory = "/backup" + last;
+			System.out.println(directory);
+			File direcs = new File(directory);
+			
+			direcs.mkdirs();
+			File newFile = new File(directory+file.getAbsolutePath().substring(t));
+			FileOutputStream fos = new FileOutputStream(newFile);
+			BufferedOutputStream bos = new BufferedOutputStream(fos);
+			int total = 0;
+			int count = 0;
+			while(total < length && (count = reader.read(buffer, 0, (int) Math.min(buffer.length, length-total))) > 0){
+				bos.write(buffer,0,count);
+				total += count;
+			}
+			writer.writeUTF("File " + file.getAbsolutePath() + " is created!");
+			writer.flush();
+			bos.close();
+			fos.close();
+		} catch(IOException e){
+
+		}
+	}
+
+	private void get() {
+		try {
+			clientToServer.writeUTF("get");
+			int files = serverToClient.readInt();
+			System.out.println("# files: " + files );
+			for(int i = 0; i < files; i++){
+				String name = readFileName(serverToClient, buffer);
+				System.out.print(String.format("%-50s","Size of file: " + serverToClient.readLong()));
+				
+				serverToClient.readBoolean();
+				System.out.print(String.format("%-100s",name));
+				System.out.println();
+			}
+		} catch (IOException e) {
+			
+		}
+	}
+	
+	private String readFileName(DataInputStream reader, byte[] b){
+		String name = "";
+		try{
+			int fileNameLength = reader.readInt();
+			int total = 0;
+			int count = 0;
+			//TODO
+			while(total < fileNameLength && (count = reader.read(b, 0, (int) Math.min(b.length, fileNameLength-total))) > 0){
+				name += new String(b,0,count);
+				total += count;
+			}
+		} catch(IOException e){
+			
+		}
+		return name;
 	}
 }
