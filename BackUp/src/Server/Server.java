@@ -16,10 +16,17 @@ public class Server extends Thread {
 	private static boolean notStopped = false;
 	private ServerSocket server;
 	private Socket acceptingSocket;
+	private String fileNameServer;
 
 	private byte[] b = new byte[2048];
 
 	public Server(int port) {
+		String OS = System.getProperty("os.name");
+		if(OS.indexOf("win") >= 0){
+			fileNameServer = "C:\\backup";
+		} else if(OS.indexOf("nix") >= 0|| OS.indexOf("nux") >= 0 || OS.indexOf("aix") > 0 ){
+			fileNameServer = "/backup";
+		}
 		try {
 			server = new ServerSocket(port);
 		} catch (IOException e) {
@@ -82,7 +89,7 @@ public class Server extends Thread {
 
 	private void sendFileNames(DataOutputStream writer) {
 		ArrayList<File> files = new ArrayList<File>();
-		listf("/backup", files);
+		listf(fileNameServer, files);
 		try {
 			writer.writeInt(files.size());
 			writer.flush();
@@ -167,7 +174,7 @@ public class Server extends Thread {
 				length = reader.readLong();
 				System.out.println("File length: " + length);
 				dir = reader.readBoolean();
-				path = "/backup" + path;
+				path = fileNameServer + path;
 				file = new File(path);
 				if (!dir) {
 					receiveFile(reader, writer, file, length);
@@ -187,7 +194,7 @@ public class Server extends Thread {
 			System.out.println("File: " + file.getAbsolutePath());
 			int p = dirs.lastIndexOf("/");
 			String last = dirs.substring(p);
-			String directory = "/backup" + last;
+			String directory = fileNameServer + last;
 			System.out.println(directory);
 			File direcs = new File(directory);
 
@@ -229,6 +236,14 @@ public class Server extends Thread {
 		}
 	}
 
+	public boolean isRunning() {
+		return notStopped;
+	}
+
+	public int getPort() {
+		return server.getLocalPort();
+	}
+
 	public static void main(String[] args) {
 		int port = Integer.parseInt(args[0]);
 		Server server = new Server(port);
@@ -237,13 +252,5 @@ public class Server extends Thread {
 			server.run();
 		}
 		while (notStopped);
-	}
-
-	public boolean isRunning() {
-		return notStopped;
-	}
-
-	public int getPort() {
-		return server.getLocalPort();
 	}
 }
