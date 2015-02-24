@@ -133,33 +133,6 @@ public class Client {
 	    	}
 	    }
 	}
-	
-	public static void main(String[] args){
-		/**
-		 * args[0] = name of server host
-		 * args[1] = port of server
-		 * args[2] = command to execute
-		 * args[3] = file to restore if args[2] == restore
-		 * args[4] = where to restore the file in args[3] 
-		 */
-		String name = args[0];
-		int port = Integer.parseInt(args[1]);
-		System.out.println("Name: " + name + " Port: " + port);
-		Client client = new Client(name, port);
-		if(args[2].equalsIgnoreCase("backup")){
-			System.out.println(args[3]);
-			File file = new File(args[3]);
-			if(file.exists())
-				client.backUp(args[3]);
-			else System.out.println("File doesn't exist");
-		} else if(args[2].equalsIgnoreCase("get")){
-			client.get();
-		} else if(args[2].equalsIgnoreCase("restore")){
-			client.restore(args[3],args[4]);
-		}
-		client.stop();
-		
-	}
 
 	private void restore(String fileToRestore, String location) {
 		String name = "";
@@ -186,6 +159,7 @@ public class Client {
 		}
 	}
 	
+	//TODO
 	private void receiveFile(DataInputStream reader, DataOutputStream writer, File file, long length) {
 		try{
 			int t = file.getAbsolutePath().lastIndexOf("/");
@@ -223,10 +197,17 @@ public class Client {
 			System.out.println("# files: " + files );
 			for(int i = 0; i < files; i++){
 				String name = readFileName(serverToClient, buffer);
-				System.out.print(String.format("%-50s","Size of file: " + serverToClient.readLong()));
+				Long fileSize = serverToClient.readLong();
+				int index = 0;
+				while(fileSize/100 > 1){
+					fileSize /= 100;
+					index++;
+				}
+				System.out.print(String.format("%-18s","Size of file: " + fileSize));
+				System.out.print(String.format("%-5s",  FileSize.values()[index]));
 				
 				serverToClient.readBoolean();
-				System.out.print(String.format("%-100s",name));
+				System.out.print(name);
 				System.out.println();
 			}
 		} catch (IOException e) {
@@ -249,5 +230,25 @@ public class Client {
 			
 		}
 		return name;
+	}
+	
+
+	public static void main(String[] args){
+		String name = args[0];
+		int port = Integer.parseInt(args[1]);
+		System.out.println("Name: " + name + " Port: " + port);
+		Client client = new Client(name, port);
+		if(args[2].equalsIgnoreCase("backup")){
+			System.out.println(args[3]);
+			File file = new File(args[3]);
+			if(file.exists())client.backUp(args[3]);
+			else System.out.println("File doesn't exist");
+		} else if(args[2].equalsIgnoreCase("get")){
+			client.get();
+		} else if(args[2].equalsIgnoreCase("restore")){
+			client.restore(args[3],args[4]);
+		}
+		client.stop();
+		
 	}
 }
