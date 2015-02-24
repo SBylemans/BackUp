@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,6 +17,8 @@ public class Server extends Thread {
 	private static boolean notStopped = false;
 	private ServerSocket server;
 	private Socket acceptingSocket;
+	private DataOutputStream serverToClient;
+	private DataInputStream clientToServer;
 
 	private byte[] b = new byte[2048];
 	
@@ -32,6 +35,7 @@ public class Server extends Thread {
 	 */
 	public void run(){
 		notStopped = true;
+		System.out.println("running");
 		BufferedInputStream buffer = null;
 		DataInputStream reader = null;
 		BufferedOutputStream out = null;
@@ -40,9 +44,11 @@ public class Server extends Thread {
 		String command = "";
 		try {
 			acceptingSocket = server.accept();
-			buffer = new BufferedInputStream(acceptingSocket.getInputStream());
+			serverToClient = new DataOutputStream(acceptingSocket.getOutputStream());
+			clientToServer  = new DataInputStream(acceptingSocket.getInputStream());
+			buffer = new BufferedInputStream(clientToServer);
 			reader = new DataInputStream(buffer);
-			out = new BufferedOutputStream(acceptingSocket.getOutputStream());
+			out = new BufferedOutputStream(serverToClient);
 			writer = new DataOutputStream(out);
 			command = reader.readUTF();
 			if(command.equalsIgnoreCase("backup")){
@@ -55,20 +61,22 @@ public class Server extends Thread {
 				sendFileNames(writer);
 			} else if(command.equalsIgnoreCase("restore")){
 				System.out.println("Restoring");
-				sendFiles(writer, reader);
-			}
+				String filePath = reader.readUTF();
+				sendFiles(writer, reader, filePath);
+			} else if(command.equalsIgnoreCase("stop"))
+				notStopped = false;
 		} catch (IOException e1) {
 		}
 	}
 	
-	public void sendFiles(DataOutputStream writer, DataInputStream reader){
+	public void sendFiles(DataOutputStream writer, DataInputStream reader, String filePath){
 		ArrayList<File> files = new ArrayList<File>();
 		boolean dir = false;
 		try{
 			listf(filePath, files);
 			writer.writeInt(files.size());
 			for(File fi : files){
-				sendFileNameAndLength(fi);
+				sendFileNameAndLength(fi, writer);
 				dir = fi.isDirectory();
 				if(!dir){
 					sendFile(fi);
@@ -80,9 +88,29 @@ public class Server extends Thread {
 		}
 	}
 	
+	private void sendFile(File file){
+		try{
+			FileInputStream fis = new FileInputStream(file);
+
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			int total = 0;
+			int count = 0;
+			long length = file.length();
+			while(total < length && (count = bis.read(b, 0, (int) Math.min(b.length, length-total))) > 0){
+				serverToClient.write(b,0,(int) Math.min(b.length, length-total));
+				total += count;
+			}
+			System.out.println(clientToServer.readUTF());
+			bis.close();
+			fis.close();
+		}catch (IOException e){
+			System.out.println("Could not send file");
+		}
+	}
+	
 	private void sendFileNames(DataOutputStream writer) {
 		ArrayList<File> files = new ArrayList<File>();
-		listf("/backup", files);
+		listf("D:/backup", files);
 		try {
 			writer.writeInt(files.size());
 			writer.flush();
@@ -163,7 +191,6 @@ public class Server extends Thread {
 				length = reader.readLong();
 				System.out.println("File length: " + length);
 				dir = reader.readBoolean();
-				path = "/backup" + path;
 				file = new File(path);
 				if(!dir){
 					receiveFile(reader,writer,file, length);
@@ -176,13 +203,11 @@ public class Server extends Thread {
 
 	private void receiveFile(DataInputStream reader, DataOutputStream writer, File file, long length) {
 		try{
-			int t = file.getAbsolutePath().lastIndexOf("/");
-			String dirs = file.getAbsolutePath().substring(0, t);
-			System.out.println("File: " + file.getAbsolutePath());
-			int p = dirs.lastIndexOf("/");
-			String last = dirs.substring(p);
-			String directory = "/backup" + last;
-			System.out.println(directory);
+			int first = file.getAbsolutePath().indexOf("\\");
+			int t = file.getAbsolutePath().lastIndexOf("\\");
+			String dirs = file.getAbsolutePath().substring(first);
+			String directory = "D:/backup" + dirs;
+			System.out.println("Directory: " + directory);
 			File direcs = new File(directory);
 			
 			direcs.mkdirs();
@@ -195,7 +220,7 @@ public class Server extends Thread {
 				bos.write(b,0,count);
 				total += count;
 			}
-			writer.writeUTF("File " + file.getAbsolutePath() + " is created!");
+			writer.writeUTF("File " + directory + " is created!");
 			writer.flush();
 			bos.close();
 			fos.close();

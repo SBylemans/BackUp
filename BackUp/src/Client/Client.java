@@ -135,6 +135,13 @@ public class Client {
 	}
 	
 	public static void main(String[] args){
+		/**
+		 * args[0] = name of server host
+		 * args[1] = port of server
+		 * args[2] = command to execute
+		 * args[3] = file to restore if args[2] == restore
+		 * args[4] = where to restore the file in args[3] 
+		 */
 		String name = args[0];
 		int port = Integer.parseInt(args[1]);
 		System.out.println("Name: " + name + " Port: " + port);
@@ -142,7 +149,8 @@ public class Client {
 		if(args[2].equalsIgnoreCase("backup")){
 			System.out.println(args[3]);
 			File file = new File(args[3]);
-			if(file.exists())client.backUp(args[3]);
+			if(file.exists())
+				client.backUp(args[3]);
 			else System.out.println("File doesn't exist");
 		} else if(args[2].equalsIgnoreCase("get")){
 			client.get();
@@ -185,7 +193,7 @@ public class Client {
 			System.out.println("File: " + file.getAbsolutePath());
 			int p = dirs.lastIndexOf("/");
 			String last = dirs.substring(p);
-			String directory = "/backup" + last;
+			String directory = "D:/backup" + last;
 			System.out.println(directory);
 			File direcs = new File(directory);
 			
