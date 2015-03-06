@@ -165,14 +165,10 @@ public class Client {
 			int t = file.getAbsolutePath().lastIndexOf("/");
 			String dirs = file.getAbsolutePath().substring(0, t);
 			System.out.println("File: " + file.getAbsolutePath());
-			int p = dirs.lastIndexOf("/");
-			String last = dirs.substring(p);
-			String directory = "D:/backup" + last;
-			System.out.println(directory);
-			File direcs = new File(directory);
+			File direcs = new File(dirs);
 			
 			direcs.mkdirs();
-			File newFile = new File(directory+file.getAbsolutePath().substring(t));
+			File newFile = new File(file.getAbsolutePath());
 			FileOutputStream fos = new FileOutputStream(newFile);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			int total = 0;
@@ -199,8 +195,8 @@ public class Client {
 				String name = readFileName(serverToClient, buffer);
 				Long fileSize = serverToClient.readLong();
 				int index = 0;
-				while(fileSize/100 > 1){
-					fileSize /= 100;
+				while(fileSize/1000 > 1){
+					fileSize /= 1000;
 					index++;
 				}
 				System.out.print(String.format("%-18s","Size of file: " + fileSize));

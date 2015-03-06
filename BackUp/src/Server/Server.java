@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class Server extends Thread {
 				sendFileNames(writer);
 			} else if(command.equalsIgnoreCase("restore")){
 				System.out.println("Restoring");
-				String filePath = reader.readUTF();
+				String filePath = readFileName(reader);
 				sendFiles(writer, reader, filePath);
 			} else if(command.equalsIgnoreCase("stop"))
 				notStopped = false;
@@ -239,7 +240,7 @@ public class Server extends Thread {
 				bos.write(b, 0, count);
 				total += count;
 			}
-			writer.writeUTF("File " + directory + " is created!");
+			writer.writeUTF("File " + newFile.getAbsolutePath() + " is created!");
 			writer.flush();
 			bos.close();
 			fos.close();
